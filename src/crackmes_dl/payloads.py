@@ -23,6 +23,9 @@ class SearchPayload(Payload):
     arch: Optional[str] = None
     platform: Optional[str] = None
 
+    class Config:
+        allow_population_by_field_name = True
+
     @root_validator
     def min_is_less_than_max(cls, values: dict) -> dict[str, Any]:  # noqa: WPS110
         min_difficulty: int = values["difficulty_min"]

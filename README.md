@@ -7,9 +7,9 @@ Download crackmes from <https://crackmes.one> using the commandline.
 ```sh
 pip install --user git+https://github.com/nymann/crackmes_dl.git
 
-crackmes_dl MyUserName --output-dir ~/.local/share/crackmes
+crackmes_dl overseer --output-dir /home/knj/.local/share/crackmes --lang "C/C++" --quality-min 5
 Password:
-Downloading 150 crackmes  [####################################]  100%
+Downloading 23 crackmes  [####################################]  100%
 ```
 
 ### Cross platform development
