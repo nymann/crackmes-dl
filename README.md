@@ -1,5 +1,14 @@
 # Crackmes DL
 
+Download crackmes from <https://crackmes.one> using the commandline.
+
+### Usage
+
+```sh
+pip install --user git+https://github.com/nymann/crackmes_dl.git
+crackmes_dl --help
+```
+
 ### Cross platform development
 
 By installing `make` you can do the following:
