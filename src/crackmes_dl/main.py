@@ -2,18 +2,21 @@ from pathlib import Path
 
 import typer
 
-from crackmes_dl.api import AuthPayload
 from crackmes_dl.api import CrackmesApi
-from crackmes_dl.api import SearchPayload
+from crackmes_dl.payloads import AuthPayload
+from crackmes_dl.payloads import SearchPayload
 
 app = typer.Typer()
+
+PasswordPrompt: str = typer.Option(..., prompt=True, hide_input=True)
+RequiredPath: Path = typer.Option(...)
 
 
 @app.command()
 def download(
     username: str,
-    password: str = typer.Option(..., prompt=True, hide_input=True),
-    output_dir: Path = typer.Option(...),
+    password: str = PasswordPrompt,
+    output_dir: Path = RequiredPath,
     domain: str = "https://crackmes.one",
 ) -> None:
     api = CrackmesApi(domain=domain)

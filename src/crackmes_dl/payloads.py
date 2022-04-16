@@ -7,9 +7,9 @@ from pydantic import root_validator
 
 class Payload(BaseModel):
     def payload(self, token: str) -> dict[str, Union[str, int]]:
-        p = self.dict(by_alias=True, exclude_none=True)
-        p["token"] = token
-        return p
+        payload_data = self.dict(by_alias=True, exclude_none=True)
+        payload_data.update(token=token)
+        return payload_data
 
 
 class SearchPayload(Payload):
@@ -24,10 +24,10 @@ class SearchPayload(Payload):
     platform: Optional[str] = None
 
     @root_validator
-    def min_is_less_than_max(cls, values: dict) -> dict[str, Any]:
-        min: int = values["difficulty_min"]
-        max: int = values["difficulty_max"]
-        if min >= max:
+    def min_is_less_than_max(cls, values: dict) -> dict[str, Any]:  # noqa: WPS110
+        min_difficulty: int = values["difficulty_min"]
+        max_difficulty: int = values["difficulty_max"]
+        if min_difficulty >= max_difficulty:
             raise ValueError("difficulty_min should be minimum be 1 less than difficulty_max")
         return values
 

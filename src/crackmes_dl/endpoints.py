@@ -18,8 +18,8 @@ class Endpoint:
 
     def post(self, session: Session, payload: Payload) -> Response:
         token: str = self._find_input_token(session=session)
-        p = payload.payload(token=token)
-        return session.post(url=self.endpoint, data=p)
+        payload_data = payload.payload(token=token)
+        return session.post(url=self.endpoint, data=payload_data)
 
     def _find_input_token(self, session: Session) -> str:
         response: Response = session.get(url=self.endpoint)
@@ -35,7 +35,7 @@ class LoginEndpoint(Endpoint):
         super().__init__(domain=domain, endpoint="/login")
 
     def authenticate(self, session: Session, payload: AuthPayload) -> bool:
-        login_response = super().post(session=session, payload=payload)
+        login_response = self.post(session=session, payload=payload)
         login_response.raise_for_status()
         return "Login successful!" in login_response.text
 
@@ -45,7 +45,7 @@ class SearchEndpoint(Endpoint):
         super().__init__(domain=domain, endpoint="/search")
 
     def search(self, session: Session, payload: SearchPayload) -> list[SearchResultEntry]:
-        search_response = super().post(session=session, payload=payload)
+        search_response = self.post(session=session, payload=payload)
         search_response.raise_for_status()
         html = search_response.text
         return self._search_results(html=html)
@@ -66,6 +66,15 @@ class CrackmeEndpoint:
         self.domain = domain
 
     def download(self, session: Session, crackme: Link, output_dir: Path) -> None:
+        url = self._find_download_url(session=session, crackme=crackme)
+        name = url.split("/")[-1]
+        output_path = output_dir.joinpath(name)
+        if self._file_already_exists(output_path=output_path):
+            return
+        crackme_dl_response: Response = session.get(self.domain + url)
+        self._save_file(output_path=output_path, file_content=crackme_dl_response.content)
+
+    def _find_download_url(self, session: Session, crackme: Link) -> str:
         response: Response = session.get(self.domain + crackme.url)
         response.raise_for_status()
         html = response.text
@@ -73,13 +82,11 @@ class CrackmeEndpoint:
             raise Exception("Download button not found")
         soup = BeautifulSoup(markup=html, features="html.parser")
         download_btns: ResultSet = soup.find_all(name="a", attrs={"class": "btn-download"}, href=True)
-        url = download_btns[0]["href"]
-        name = url.split("/")[-1]
-        output_path = output_dir.joinpath(name)
-        if output_path.is_file():
-            # File exists, skipping
-            return
-        crackme_dl_response: Response = session.get(self.domain + url)
+        return download_btns[0]["href"]
 
+    def _file_already_exists(self, output_path: Path) -> bool:
+        return output_path.is_file()
+
+    def _save_file(self, output_path: Path, file_content: bytes) -> None:
         with open(file=output_path, mode="wb+") as zip_file:
-            zip_file.write(crackme_dl_response.content)
+            zip_file.write(file_content)

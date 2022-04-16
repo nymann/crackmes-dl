@@ -9,9 +9,9 @@ class Link(BaseModel):
     url: str
 
     @classmethod
-    def from_col(cls, col: Tag):
-        a = col.find_all(href=True)[0]
-        return cls(text=col.text.strip(), url=a["href"])
+    def from_col(cls, col: Tag) -> "Link":
+        anchor_tag = col.find_all(href=True)[0]
+        return cls(text=col.text.strip(), url=anchor_tag["href"])
 
 
 class SearchResultEntry(BaseModel):
@@ -27,7 +27,7 @@ class SearchResultEntry(BaseModel):
     comments_count: int
 
     @classmethod
-    def from_row(cls, row: Tag):
+    def from_row(cls, row: Tag) -> "SearchResultEntry":
         cols: list[Tag] = row.find_all(name="td")
         crackme = Link.from_col(cols[0])
         author = Link.from_col(cols[1])

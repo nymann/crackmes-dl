@@ -25,7 +25,8 @@ class CrackmesApi:
         return self._search.search(session=self._session, payload=payload)
 
     def download(self, output_dir: Path, crackmes: list[SearchResultEntry]) -> None:
-        with typer.progressbar(crackmes, label=f"Downloading {len(crackmes)} crackmes") as progress:
+        count = len(crackmes)
+        with typer.progressbar(crackmes, label=f"Downloading {count} crackmes") as progress:
             for crackme in progress:
                 self._crackme.download(
                     session=self._session,
