@@ -4,9 +4,19 @@ from bs4.element import Tag
 from pydantic import BaseModel
 
 
+class Link(BaseModel):
+    text: str
+    url: str
+
+    @classmethod
+    def from_col(cls, col: Tag):
+        a = col.find_all(href=True)[0]
+        return cls(text=col.text.strip(), url=a["href"])
+
+
 class SearchResultEntry(BaseModel):
-    name: str
-    author: str
+    crackme: Link
+    author: Link
     language: str
     arch: str
     difficulty: float
@@ -18,16 +28,19 @@ class SearchResultEntry(BaseModel):
 
     @classmethod
     def from_row(cls, row: Tag):
-        cols = [col.text.strip() for col in row.find_all(name="td")]
+        cols: list[Tag] = row.find_all(name="td")
+        crackme = Link.from_col(cols[0])
+        author = Link.from_col(cols[1])
+        stripped: list[str] = [col.text.strip() for col in cols]
         return cls(
-            name=cols[0],
-            author=cols[1],
-            language=cols[2],
-            arch=cols[3],
-            difficulty=float(cols[4]),
-            quality=float(cols[5]),
-            platform=cols[6],
-            uploaded_ts=datetime.strptime(cols[7], "%I:%M %p %m/%d/%Y"),
-            solutions_count=int(cols[8]),
-            comments_count=int(cols[9]),
+            crackme=crackme,
+            author=author,
+            language=stripped[2],
+            arch=stripped[3],
+            difficulty=float(stripped[4]),
+            quality=float(stripped[5]),
+            platform=stripped[6],
+            uploaded_ts=datetime.strptime(stripped[7], "%I:%M %p %m/%d/%Y"),
+            solutions_count=int(stripped[8]),
+            comments_count=int(stripped[9]),
         )

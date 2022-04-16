@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import typer
 
 from crackmes_dl.api import AuthPayload
@@ -11,14 +13,15 @@ app = typer.Typer()
 def download(
     username: str,
     password: str = typer.Option(..., prompt=True, hide_input=True),
+    output_dir: Path = typer.Option(...),
     domain: str = "https://crackmes.one",
 ) -> None:
     api = CrackmesApi(domain=domain)
     creds = AuthPayload(name=username, password=password)
-    if not api.login(payload=creds):
-        raise Exception("Login failed")
+    api.login(payload=creds)
     search_terms = SearchPayload()
-    api.search(payload=search_terms)
+    crackmes = api.search(payload=search_terms)
+    api.download(output_dir=output_dir, crackmes=crackmes)
 
 
 if __name__ == "__main__":
