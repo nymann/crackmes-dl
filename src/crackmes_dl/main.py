@@ -8,12 +8,16 @@ app = typer.Typer()
 
 
 @app.command()
-def download(username: str, password: str, domain: str = "https://crackmes.one") -> None:
+def download(
+    username: str,
+    password: str = typer.Option(..., prompt=True, hide_input=True),
+    domain: str = "https://crackmes.one",
+) -> None:
     api = CrackmesApi(domain=domain)
     creds = AuthPayload(name=username, password=password)
     if not api.login(payload=creds):
         raise Exception("Login failed")
-    search_terms = SearchPayload(name="ransom")
+    search_terms = SearchPayload()
     api.search(payload=search_terms)
 
 
