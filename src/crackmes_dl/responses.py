@@ -14,7 +14,7 @@ class Link(BaseModel):
         return cls(text=col.text.strip(), url=anchor_tag["href"])
 
 
-class SearchResultEntry(BaseModel):
+class CrackmeEntry(BaseModel):
     crackme: Link
     author: Link
     language: str
@@ -27,7 +27,7 @@ class SearchResultEntry(BaseModel):
     comments_count: int
 
     @classmethod
-    def from_row(cls, row: Tag) -> "SearchResultEntry":
+    def from_row(cls, row: Tag) -> "CrackmeEntry":
         cols: list[Tag] = row.find_all(name="td")
         crackme = Link.from_col(cols[0])
         author = Link.from_col(cols[1])

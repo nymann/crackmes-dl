@@ -36,9 +36,16 @@ class Platforms(str, Enum):
 
 
 @app.command()
-def download(  # noqa: WPS211
-    username: str,
-    password: str = PasswordPrompt,
+def download_all(
+    output_dir: Path = RequiredPath,
+    domain: str = "https://crackmes.one",
+):
+    api = CrackmesApi(domain=domain)
+    api.download(output_dir=output_dir, crackmes=[])
+
+
+@app.command()
+def search_and_download(  # noqa: WPS211
     output_dir: Path = RequiredPath,
     domain: str = "https://crackmes.one",
     name: str = typer.Option("", help="Name of the crackme must include 'search string'"),
@@ -52,8 +59,6 @@ def download(  # noqa: WPS211
     platform: Optional[Platforms] = typer.Option(None, help="Defaults to including all"),
 ) -> None:
     api = CrackmesApi(domain=domain)
-    creds = AuthPayload(name=username, password=password)
-    api.login(payload=creds)
     search_terms = SearchPayload(
         name=name,
         author=author,

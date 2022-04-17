@@ -8,14 +8,16 @@ from requests.sessions import Session
 from crackmes_dl.payloads import AuthPayload
 from crackmes_dl.payloads import Payload
 from crackmes_dl.payloads import SearchPayload
+from crackmes_dl.responses import CrackmeEntry
 from crackmes_dl.responses import Link
-from crackmes_dl.responses import SearchResultEntry
 
 
 class Endpoint:
     def __init__(self, domain: str, endpoint: str) -> None:
         self.endpoint = domain + endpoint
 
+
+class FormEndpoint(Endpoint):
     def post(self, session: Session, payload: Payload) -> Response:
         token: str = self._find_input_token(session=session)
         payload_data = payload.payload(token=token)
@@ -30,7 +32,7 @@ class Endpoint:
         raise Exception("Couldn't find input token")
 
 
-class LoginEndpoint(Endpoint):
+class LoginEndpoint(FormEndpoint):
     def __init__(self, domain: str) -> None:
         super().__init__(domain=domain, endpoint="/login")
 
@@ -40,17 +42,17 @@ class LoginEndpoint(Endpoint):
         return "Login successful!" in login_response.text
 
 
-class SearchEndpoint(Endpoint):
+class SearchEndpoint(FormEndpoint):
     def __init__(self, domain: str) -> None:
         super().__init__(domain=domain, endpoint="/search")
 
-    def search(self, session: Session, payload: SearchPayload) -> list[SearchResultEntry]:
+    def search(self, session: Session, payload: SearchPayload) -> list[CrackmeEntry]:
         search_response = self.post(session=session, payload=payload)
         search_response.raise_for_status()
         html = search_response.text
         return self._search_results(html=html)
 
-    def _search_results(self, html: str) -> list[SearchResultEntry]:
+    def _search_results(self, html: str) -> list[CrackmeEntry]:
         soup = BeautifulSoup(markup=html, features="html.parser")
         tables: ResultSet = soup.find_all(name="table", attrs={"class": "table-striped"})
         if len(tables) != 1:
@@ -58,7 +60,7 @@ class SearchEndpoint(Endpoint):
         table = tables[0]
         body = table.find(name="tbody")
         rows = body.find_all(name="tr")
-        return [SearchResultEntry.from_row(row) for row in rows]
+        return [CrackmeEntry.from_row(row) for row in rows]
 
 
 class CrackmeEndpoint:
@@ -66,11 +68,12 @@ class CrackmeEndpoint:
         self.domain = domain
 
     def download(self, session: Session, crackme: Link, output_dir: Path) -> None:
-        url = self._find_download_url(session=session, crackme=crackme)
-        name = url.split("/")[-1]
+        crackme_id: str = crackme.url.split("/")[-1]
+        name = f"{crackme_id}.zip"
         output_path = output_dir.joinpath(name)
         if self._file_already_exists(output_path=output_path):
             return
+        url = self._find_download_url(session=session, crackme=crackme)
         crackme_dl_response: Response = session.get(self.domain + url)
         self._save_file(output_path=output_path, file_content=crackme_dl_response.content)
 
@@ -90,3 +93,14 @@ class CrackmeEndpoint:
     def _save_file(self, output_path: Path, file_content: bytes) -> None:
         with open(file=output_path, mode="wb+") as zip_file:
             zip_file.write(file_content)
+
+
+class LastsEndpoint(Endpoint):
+    def __init__(self, domain: str) -> None:
+        super().__init__(domain=domain, endpoint="/lasts")
+
+    def get_crackmes_on_page(self, session: Session, page: int) -> list[CrackmeEntry]:
+        response: Response = session.get(url=f"{self.endpoint}/{page}")
+        soup = BeautifulSoup(markup=response.text, features="html.parser")
+        rows = soup.find_all(name="tr", attrs={"class": "text-center"})
+        return [CrackmeEntry.from_row(row) for row in rows]
