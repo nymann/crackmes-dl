@@ -10,6 +10,7 @@ from crackmes_dl.endpoints import SearchEndpoint
 from crackmes_dl.payloads import AuthPayload
 from crackmes_dl.payloads import SearchPayload
 from crackmes_dl.responses import CrackmeEntry
+from crackmes_dl.responses import Link
 
 
 class CrackmesApi:
@@ -25,6 +26,14 @@ class CrackmesApi:
 
     def search(self, payload: SearchPayload) -> list[CrackmeEntry]:
         return self._search.search(session=self._session, payload=payload)
+
+    def download_single(self, output_dir: Path, crackme_id: str) -> None:
+        crackme = Link(text=crackme_id, url=f"crackme/{crackme_id}")
+        self._crackme.download(
+            session=self._session,
+            crackme=crackme,
+            output_dir=output_dir,
+        )
 
     def download(self, output_dir: Path, crackmes: list[CrackmeEntry]) -> None:
         count = len(crackmes)

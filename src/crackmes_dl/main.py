@@ -12,6 +12,8 @@ app = typer.Typer()
 
 PasswordPrompt: str = typer.Option(..., prompt=True, hide_input=True)
 RequiredPath: Path = typer.Option(...)
+Id: str = typer.Option(..., help="fx: 617965c733c5d4329c345330")
+Domain: str = typer.Option("https://crackmes.one")
 
 
 class Languages(str, Enum):
@@ -38,9 +40,9 @@ class Platforms(str, Enum):
 @app.command()
 def download_all(
     output_dir: Path = RequiredPath,
-    domain: str = "https://crackmes.one",
+    domain: str = Domain,
     starting_page: int = 1,
-):
+) -> None:
     api = CrackmesApi(domain=domain)
     for page in count(start=starting_page):
         typer.echo(f"Downloading page: {page}")
@@ -48,6 +50,12 @@ def download_all(
         if not crackmes:
             break
         api.download(output_dir=output_dir, crackmes=crackmes)
+
+
+@app.command()
+def download(output_dir: Path = RequiredPath, crackme: str = Id, domain: str = "https://crackmes.one") -> None:
+    api = CrackmesApi(domain=domain)
+    api.download_single(crackme_id=crackme, output_dir=output_dir)
 
 
 @app.command()

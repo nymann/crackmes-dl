@@ -65,22 +65,23 @@ class SearchEndpoint(FormEndpoint):
         return [CrackmeEntry.from_row(row) for row in rows]
 
 
-class CrackmeEndpoint:
+class CrackmeEndpoint(Endpoint):
     def __init__(self, domain: str) -> None:
         self.domain = domain
+        super().__init__(domain=domain, endpoint="/crackme")
 
     def download(self, session: Session, crackme: Link, output_dir: Path) -> None:
         crackme_id: str = crackme.url.split("/")[-1]
-        name = f"{crackme_id}.zip"
-        output_path = output_dir.joinpath(name)
+        filename = f"{crackme_id}.zip"
+        output_path = output_dir.joinpath(filename)
         if self._file_already_exists(output_path=output_path):
             return
-        url = self._find_download_url(session=session, crackme=crackme)
+        url = self._find_download_url(session=session, crackme_id=crackme_id)
         crackme_dl_response: Response = session.get(self.domain + url)
         self._save_file(output_path=output_path, file_content=crackme_dl_response.content)
 
-    def _find_download_url(self, session: Session, crackme: Link) -> str:
-        response: Response = session.get(self.domain + crackme.url)
+    def _find_download_url(self, session: Session, crackme_id: str) -> str:
+        response: Response = session.get(f"{self.endpoint}/{crackme_id}")
         response.raise_for_status()
         html = response.text
         if "btn-download" not in html:
