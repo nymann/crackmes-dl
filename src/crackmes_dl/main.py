@@ -21,6 +21,10 @@ class Languages(str, Enum):
     asm = "Assembler"
     java = "Java"
     vb = "(Visual) Basic"
+    bd = "Borland Delphi"
+    tp = "Turbo Pascal"
+    net = ".NET"
+    other = "Unspecified/other"
 
 
 class Architectures(str, Enum):
@@ -28,6 +32,8 @@ class Architectures(str, Enum):
     x86_64 = "X86-64"
     java = "java"
     arm = "ARM"
+    mips = "MIPS"
+    other = "other"
 
 
 class Platforms(str, Enum):
@@ -35,6 +41,23 @@ class Platforms(str, Enum):
     mac = "Mac OS X"
     multi = "Multiplatform"
     nix = "Unix/linux etc."
+    win = "Windows"
+    win_2k_xp = "Windows 2000/XP only"
+    win_7 = "Windows 7 Only"
+    win_vista = "Windows Vista Only"
+    other = "Unspecificed/other"
+
+
+Name: str = typer.Option("", help="Name of the crackme must include 'search string'")
+Author: str = typer.Option("", help="Author name must include 'search string'")
+Difficulty_min: int = typer.Option(1, help="Difficulty greater or equal to.")
+Difficulty_max: int = typer.Option(6, help="Difficulty less or equal to.")
+Quality_min: int = typer.Option(1, help="Quality greater or equal to.")
+Quality_max: int = typer.Option(6, help="Quality less or equal to.")
+Lang: Optional[Languages] = typer.Option(None, help="Defaults to including all")
+Arch: Optional[Architectures] = typer.Option(None, help="Defaults to including all")
+Platform: Optional[Platforms] = typer.Option(None, help="Defaults to including all")
+Quick: bool = typer.Option(True, help="Faster but limited to max 50 results")
 
 
 @app.command()
@@ -61,16 +84,17 @@ def download(output_dir: Path = RequiredPath, crackme: str = Id, domain: str = "
 @app.command()
 def search_and_download(  # noqa: WPS211
     output_dir: Path = RequiredPath,
-    domain: str = "https://crackmes.one",
-    name: str = typer.Option("", help="Name of the crackme must include 'search string'"),
-    author: str = typer.Option("", help="Author name must include 'search string'"),
-    difficulty_min: int = typer.Option(1, help="Difficulty greater or equal to."),
-    difficulty_max: int = typer.Option(6, help="Difficulty less or equal to."),
-    quality_min: int = typer.Option(1, help="Quality greater or equal to."),
-    quality_max: int = typer.Option(6, help="Quality less or equal to."),
-    lang: Optional[Languages] = typer.Option(None, help="Defaults to including all"),
-    arch: Optional[Architectures] = typer.Option(None, help="Defaults to including all"),
-    platform: Optional[Platforms] = typer.Option(None, help="Defaults to including all"),
+    domain: str = Domain,
+    quick: bool = Quick,
+    name: str = Name,
+    author: str = Author,
+    difficulty_min: int = Difficulty_min,
+    difficulty_max: int = Difficulty_max,
+    quality_min: int = Quality_min,
+    quality_max: int = Quality_max,
+    lang: Optional[Languages] = Lang,
+    arch: Optional[Architectures] = Arch,
+    platform: Optional[Platforms] = Platform,
 ) -> None:
     api = CrackmesApi(domain=domain)
     search_terms = SearchPayload(
@@ -84,8 +108,12 @@ def search_and_download(  # noqa: WPS211
         arch=arch,
         platform=platform,
     )
-    crackmes = api.search(payload=search_terms)
-    api.download(output_dir=output_dir, crackmes=crackmes)
+    if quick:
+        crackmes = api.search(payload=search_terms)
+        api.download(output_dir=output_dir, crackmes=crackmes)
+    else:
+        for crackme in api.unlimited_search(search_terms=search_terms):
+            api.download(output_dir=output_dir, crackmes=[crackme])
 
 
 if __name__ == "__main__":

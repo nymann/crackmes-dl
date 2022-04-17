@@ -1,4 +1,6 @@
+import itertools
 from pathlib import Path
+from typing import Generator, Iterable
 
 from requests.sessions import Session
 import typer
@@ -44,6 +46,16 @@ class CrackmesApi:
                     crackme=crackme.crackme,
                     output_dir=output_dir,
                 )
+
+    def unlimited_search(self, search_terms: SearchPayload) -> Iterable[CrackmeEntry]:
+        for page in itertools.count(start=1):
+            typer.echo(f"Searching page {page}")
+            crackmes_on_page = self.lasts(page=page)
+            for crackme in crackmes_on_page:
+                if crackme.matches_search_terms(search_terms=search_terms):
+                    yield crackme
+            if not crackmes_on_page:
+                return
 
     def lasts(self, page: int) -> list[CrackmeEntry]:
         return self._lasts.get_crackmes_on_page(session=self._session, page=page)

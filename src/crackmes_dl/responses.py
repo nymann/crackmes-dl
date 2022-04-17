@@ -3,6 +3,8 @@ from datetime import datetime
 from bs4.element import Tag
 from pydantic import BaseModel
 
+from crackmes_dl.payloads import SearchPayload
+
 
 class Link(BaseModel):
     text: str
@@ -44,3 +46,18 @@ class CrackmeEntry(BaseModel):
             solutions_count=int(stripped[8]),
             comments_count=int(stripped[9]),
         )
+
+    def matches_search_terms(self, search_terms: SearchPayload) -> bool:
+        if search_terms.name not in self.crackme.text:
+            return False
+        if search_terms.author not in self.author.text:
+            return False
+        if self.quality < search_terms.quality_min:
+            return False
+        if self.quality > search_terms.quality_max:
+            return False
+        if search_terms.lang and search_terms.lang != self.language:
+            return False
+        if search_terms.platform and search_terms.platform != self.platform:
+            return False
+        return True

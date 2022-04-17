@@ -21,7 +21,7 @@ Given an output directory and a starting page (defaults to 1), download all crac
 ### Search and download
 
 Download only crackmes matching certain filters (as seen on <https://crackmes.one/search>).
-Note that using search and download you can maximum download 50 crackmes at a time, this is due to a site restriction.
+Note that using search and download without the `--no-quick` flag you can maximum download 50 crackmes at a time, this is due to a site restriction.
 
 ### Download
 
