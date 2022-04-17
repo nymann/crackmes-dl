@@ -1,11 +1,11 @@
 from enum import Enum
+from itertools import count
 from pathlib import Path
 from typing import Optional
 
 import typer
 
 from crackmes_dl.api import CrackmesApi
-from crackmes_dl.payloads import AuthPayload
 from crackmes_dl.payloads import SearchPayload
 
 app = typer.Typer()
@@ -39,9 +39,15 @@ class Platforms(str, Enum):
 def download_all(
     output_dir: Path = RequiredPath,
     domain: str = "https://crackmes.one",
+    starting_page: int = 1,
 ):
     api = CrackmesApi(domain=domain)
-    api.download(output_dir=output_dir, crackmes=[])
+    for page in count(start=starting_page):
+        typer.echo(f"Downloading page: {page}")
+        crackmes = api.lasts(page=page)
+        if not crackmes:
+            break
+        api.download(output_dir=output_dir, crackmes=crackmes)
 
 
 @app.command()

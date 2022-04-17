@@ -35,3 +35,6 @@ class CrackmesApi:
                     crackme=crackme.crackme,
                     output_dir=output_dir,
                 )
+
+    def lasts(self, page: int) -> list[CrackmeEntry]:
+        return self._lasts.get_crackmes_on_page(session=self._session, page=page)

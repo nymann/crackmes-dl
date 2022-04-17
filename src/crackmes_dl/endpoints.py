@@ -11,6 +11,8 @@ from crackmes_dl.payloads import SearchPayload
 from crackmes_dl.responses import CrackmeEntry
 from crackmes_dl.responses import Link
 
+HTML_PARSER = "html.parser"
+
 
 class Endpoint:
     def __init__(self, domain: str, endpoint: str) -> None:
@@ -25,7 +27,7 @@ class FormEndpoint(Endpoint):
 
     def _find_input_token(self, session: Session) -> str:
         response: Response = session.get(url=self.endpoint)
-        soup = BeautifulSoup(markup=response.text, features="html.parser")
+        soup = BeautifulSoup(markup=response.text, features=HTML_PARSER)
         found_input_tokens: ResultSet = soup.find_all(name="input", attrs={"id": "token"})
         if found_input_tokens:
             return found_input_tokens[0].get("value")
@@ -53,7 +55,7 @@ class SearchEndpoint(FormEndpoint):
         return self._search_results(html=html)
 
     def _search_results(self, html: str) -> list[CrackmeEntry]:
-        soup = BeautifulSoup(markup=html, features="html.parser")
+        soup = BeautifulSoup(markup=html, features=HTML_PARSER)
         tables: ResultSet = soup.find_all(name="table", attrs={"class": "table-striped"})
         if len(tables) != 1:
             raise Exception("We didn't find exactly 1 table!")
@@ -83,7 +85,7 @@ class CrackmeEndpoint:
         html = response.text
         if "btn-download" not in html:
             raise Exception("Download button not found")
-        soup = BeautifulSoup(markup=html, features="html.parser")
+        soup = BeautifulSoup(markup=html, features=HTML_PARSER)
         download_btns: ResultSet = soup.find_all(name="a", attrs={"class": "btn-download"}, href=True)
         return download_btns[0]["href"]
 
@@ -101,6 +103,6 @@ class LastsEndpoint(Endpoint):
 
     def get_crackmes_on_page(self, session: Session, page: int) -> list[CrackmeEntry]:
         response: Response = session.get(url=f"{self.endpoint}/{page}")
-        soup = BeautifulSoup(markup=response.text, features="html.parser")
+        soup = BeautifulSoup(markup=response.text, features=HTML_PARSER)
         rows = soup.find_all(name="tr", attrs={"class": "text-center"})
         return [CrackmeEntry.from_row(row) for row in rows]
