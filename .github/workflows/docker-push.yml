@@ -1,0 +1,16 @@
+name: Push docker image to dockerhub
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: docker login
+        run: echo -n $DOCKER_TOKEN | docker login -u nymann --password-stdin
+      - name: docker push
+        run: make docker-push

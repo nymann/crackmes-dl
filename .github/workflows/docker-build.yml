@@ -14,5 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build the Docker image
-        run: |
-          make docker-build-onbuild-ci
+        run: make docker-build
