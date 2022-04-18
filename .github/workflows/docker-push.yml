@@ -11,6 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: docker login
-        run: echo -n $DOCKER_TOKEN | docker login -u nymann --password-stdin
+        run: docker login -u nymann -p ${{ secrets.DOCKER_TOKEN }}
       - name: docker push
         run: make docker-push
