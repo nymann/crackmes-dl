@@ -73,6 +73,7 @@ class SearchEndpoint(FormEndpoint):
 class Metadata(BaseModel):
     crackme_url: str
     download_url: str
+    name: str
     author: str
     description: str
     language: str
@@ -85,6 +86,8 @@ class Metadata(BaseModel):
     @classmethod
     def from_html(cls, html: str, crackme_id: str, domain: str) -> "Metadata":  # noqa: WPS210
         soup = BeautifulSoup(markup=html, features=HTML_PARSER)
+        h3 = soup.find_all(name="h3")[0]
+        name = " ".join(h3.text.split(" ")[1:])
         section = soup.find_all(name="div", attrs={"class": "panel-background"})[0]
         p_tags = [p_tag.text.strip() for p_tag in section.find_all(name="p")]
         author: str = p_tags[0].replace("Author: ", "")
@@ -104,6 +107,7 @@ class Metadata(BaseModel):
             description=description,
             language=language,
             arch=arch,
+            name=name,
             difficulty=difficulty,
             quality=quality,
             platform=platform,
@@ -121,7 +125,7 @@ class CrackmeEndpoint(Endpoint):
         output_path = output_dir.joinpath(crackme_id)
         if self._file_already_exists(output_path=output_path):
             return
-        os.makedirs(output_path)
+        os.makedirs(output_path, exist_ok=False)
         metadata = self._find_metadata(session=session, crackme_id=crackme_id)
         crackme_dl_response: Response = session.get(metadata.download_url)
         encrypted_zip = ZipFile(BytesIO(crackme_dl_response.content))
@@ -136,7 +140,7 @@ class CrackmeEndpoint(Endpoint):
         return Metadata.from_html(html=response.text, crackme_id=crackme_id, domain=self.domain)
 
     def _file_already_exists(self, output_path: Path) -> bool:
-        return output_path.is_file()
+        return output_path.is_dir()
 
 
 class LastsEndpoint(Endpoint):

@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Build
 
 on:
   push:
@@ -6,8 +6,6 @@ on:
   pull_request:
     branches: [master]
 
-env:
-  CI_REGISTRY_IMAGE: crackmes_dl
 jobs:
   build:
     runs-on: ubuntu-latest
