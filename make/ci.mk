@@ -1,5 +1,5 @@
 DOCKER_REPO?=nymann/crackmes-dl
-DOCKER_TAG?=${DOCKER_REPO}:${VERSION}
+DOCKER_TAG?=${DOCKER_REPO}:$(shell git describe --tag --always | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 
 package: ${VERSION} setup.py
 	@python setup.py sdist bdist_wheel
@@ -9,9 +9,9 @@ docker-build: ${VERSION}
 
 docker-push: ${VERSION}
 	@docker build \
-		--cache-from ${ONBUILD} \
-        -t ${DOCKER_REPO}:latest \
-        -t ${DOCKER_REPO}:${VERSION} \
+	    --cache-from ${ONBUILD} \
+	    -t ${DOCKER_REPO}:latest \
+	    -t ${DOCKER_TAG} \
 		-f docker/Dockerfile .
 	@docker push ${DOCKER_TAG}
 
@@ -19,4 +19,7 @@ version-requirements: ${VERSION}
 	# This is used as a precursor to building images via the pipeline
 	@echo "${VERSION}"
 
-.PHONY:docker-build docker-push version-requirements package
+t: ${VERSION}
+	@echo "${DOCKER_TAG}"
+
+.PHONY:docker-build docker-push version-requirements package t
