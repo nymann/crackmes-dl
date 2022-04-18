@@ -77,6 +77,32 @@ Options:
   --help             Show this message and exit.
 ```
 
+## Running in docker
+
+```sh
+docker run nymann/crackmes_dl --help
+
+# If not specifying a command, it will download all crackmes.
+docker run nymann/crackmes_dl
+
+# To save the crackmes on the host to a known directory use the -v flag, like this:
+# Make sure to create the directory first on the host to avoid a permission issue.
+docker run -v ~/crackmes:/home/non_privileged_user/crackmes nymann/crackmes_dl
+```
+
+If you want to use docker-compose:
+
+```yml
+version: "3.7"
+
+services:
+  crackmes_dl:
+    container_name: crackmes_dl
+    image: nyman/crackmes_dl:latest
+    volumes:
+      - ./crackmes:/home/non_privileged_user/crackmes
+```
+
 ## Development
 
 For help getting started developing check [DEVELOPMENT.md](DEVELOPMENT.md)
