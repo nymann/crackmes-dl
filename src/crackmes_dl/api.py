@@ -1,6 +1,6 @@
 import itertools
 from pathlib import Path
-from typing import Generator, Iterable
+from typing import Iterable
 
 from requests.sessions import Session
 import typer

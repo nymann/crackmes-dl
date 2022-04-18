@@ -1,7 +1,9 @@
+from datetime import datetime
 from pathlib import Path
 
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet
+from pydantic.main import BaseModel
 from requests.models import Response
 from requests.sessions import Session
 
@@ -65,37 +67,74 @@ class SearchEndpoint(FormEndpoint):
         return [CrackmeEntry.from_row(row) for row in rows]
 
 
+class Metadata(BaseModel):
+    crackme_url: str
+    download_url: str
+    author: str
+    description: str
+    language: str
+    arch: str
+    difficulty: float
+    quality: float
+    platform: str
+    uploaded_ts: datetime
+
+    @classmethod
+    def from_html(cls, html: str, crackme_id: str, domain: str) -> "Metadata":  # noqa: WPS210
+        soup = BeautifulSoup(markup=html, features=HTML_PARSER)
+        section = soup.find_all(name="div", attrs={"class": "panel-background"})[0]
+        p_tags = [p_tag.text.strip() for p_tag in section.find_all(name="p")]
+        author: str = p_tags[0].replace("Author: ", "")
+        description: str = p_tags[8]
+        language: str = p_tags[1].replace("Language: ", "")
+        arch: str = p_tags[6].replace("Arch: ", "")
+        difficulty: float = float(p_tags[4].replace("Difficulty: ", ""))
+        quality: float = float(p_tags[5].replace("Quality: ", ""))
+        platform: str = p_tags[3].replace("Platform\n", "").strip()
+        uploaded: str = p_tags[2].replace("Upload: ", "").strip()
+        uploaded_ts: datetime = datetime.strptime(uploaded, "%I:%M %p %m/%d/%Y")
+
+        return Metadata(
+            crackme_url=f"{domain}/crackme/{crackme_id}",
+            download_url=f"{domain}/static/crackme/{crackme_id}.zip",
+            author=author,
+            description=description,
+            language=language,
+            arch=arch,
+            difficulty=difficulty,
+            quality=quality,
+            platform=platform,
+            uploaded_ts=uploaded_ts,
+        )
+
+
 class CrackmeEndpoint(Endpoint):
     def __init__(self, domain: str) -> None:
         self.domain = domain
         super().__init__(domain=domain, endpoint="/crackme")
 
-    def download(self, session: Session, crackme: Link, output_dir: Path) -> None:
+    def download(self, session: Session, crackme: Link, output_dir: Path) -> None:  # noqa: WPS210
         crackme_id: str = crackme.url.split("/")[-1]
-        filename = f"{crackme_id}.zip"
-        output_path = output_dir.joinpath(filename)
+        output_path = output_dir.joinpath(f"{crackme_id}.zip")
         if self._file_already_exists(output_path=output_path):
             return
-        url = self._find_download_url(session=session, crackme_id=crackme_id)
-        crackme_dl_response: Response = session.get(self.domain + url)
-        self._save_file(output_path=output_path, file_content=crackme_dl_response.content)
 
-    def _find_download_url(self, session: Session, crackme_id: str) -> str:
+        metadata = self._find_metadata(session=session, crackme_id=crackme_id)
+        crackme_dl_response: Response = session.get(metadata.download_url)
+
+        with open(file=output_path, mode="wb+") as zip_file:
+            zip_file.write(crackme_dl_response.content)
+
+        with open(file=output_dir.joinpath(f"{crackme_id}.json"), mode="w+") as json_file:
+            json_file.write(metadata.json())
+
+    def _find_metadata(self, session: Session, crackme_id: str) -> Metadata:
         response: Response = session.get(f"{self.endpoint}/{crackme_id}")
         response.raise_for_status()
-        html = response.text
-        if "btn-download" not in html:
-            raise Exception("Download button not found")
-        soup = BeautifulSoup(markup=html, features=HTML_PARSER)
-        download_btns: ResultSet = soup.find_all(name="a", attrs={"class": "btn-download"}, href=True)
-        return download_btns[0]["href"]
+        return Metadata.from_html(html=response.text, crackme_id=crackme_id, domain=self.domain)
 
     def _file_already_exists(self, output_path: Path) -> bool:
         return output_path.is_file()
-
-    def _save_file(self, output_path: Path, file_content: bytes) -> None:
-        with open(file=output_path, mode="wb+") as zip_file:
-            zip_file.write(file_content)
 
 
 class LastsEndpoint(Endpoint):

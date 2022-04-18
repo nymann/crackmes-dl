@@ -42,8 +42,8 @@ class Platforms(str, Enum):
     multi = "Multiplatform"
     nix = "Unix/linux etc."
     win = "Windows"
-    win_2k_xp = "Windows 2000/XP only"
-    win_7 = "Windows 7 Only"
+    win2000_xp = "Windows 2000/XP only"
+    win7 = "Windows 7 Only"
     win_vista = "Windows Vista Only"
     other = "Unspecificed/other"
 
@@ -57,7 +57,7 @@ Quality_max: int = typer.Option(6, help="Quality less or equal to.")
 Lang: Optional[Languages] = typer.Option(None, help="Defaults to including all")
 Arch: Optional[Architectures] = typer.Option(None, help="Defaults to including all")
 Platform: Optional[Platforms] = typer.Option(None, help="Defaults to including all")
-Quick: bool = typer.Option(True, help="Faster but limited to max 50 results")
+Quick: bool = typer.Option(True, help="Faster but limited to max 50 results")  # noqa: WPS425
 
 
 @app.command()

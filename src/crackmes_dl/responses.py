@@ -48,16 +48,15 @@ class CrackmeEntry(BaseModel):
         )
 
     def matches_search_terms(self, search_terms: SearchPayload) -> bool:
-        if search_terms.name not in self.crackme.text:
-            return False
-        if search_terms.author not in self.author.text:
-            return False
-        if self.quality < search_terms.quality_min:
-            return False
-        if self.quality > search_terms.quality_max:
-            return False
-        if search_terms.lang and search_terms.lang != self.language:
-            return False
-        if search_terms.platform and search_terms.platform != self.platform:
-            return False
-        return True
+        return all(
+            [
+                search_terms.name in self.crackme.text,
+                search_terms.author in self.author.text,
+                self.quality > search_terms.quality_min,
+                self.quality < search_terms.quality_max,
+                self.difficulty > search_terms.difficulty_min,
+                self.difficulty < search_terms.difficulty_max,
+                search_terms.lang is None or search_terms.lang == self.language,
+                search_terms.platform is None or search_terms.platform == self.platform,
+            ],
+        )
