@@ -9,7 +9,7 @@ docker-build: ${VERSION}
 
 docker-push: ${VERSION}
 	@docker build \
-	    --cache-from ${ONBUILD} \
+        --cache-from ${DOCKER_REPO}:latest \
 	    -t ${DOCKER_REPO}:latest \
 	    -t ${DOCKER_TAG} \
 		-f docker/Dockerfile .
