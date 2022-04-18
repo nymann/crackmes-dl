@@ -79,15 +79,21 @@ Options:
 
 ## Running in docker
 
+Create a directory to save the crackmes.
+
+```sh
+mkdir ~/crackmes
+chown -R 1000 ~/crackmes  # not needed if your uid is 1000 already.
+```
+
 ```sh
 docker run nymann/crackmes_dl --help
 
 # If not specifying a command, it will download all crackmes.
-docker run nymann/crackmes_dl
+docker run -v ~/crackmes:/home/u/crackmes nymann/crackmes-dl
 
-# To save the crackmes on the host to a known directory use the -v flag, like this:
-# Make sure to create the directory first on the host to avoid a permission issue.
-docker run -v ~/crackmes:/home/non_privileged_user/crackmes nymann/crackmes_dl
+# Override the command if you want to run another one
+docker run -v ~/crackmes:/home/u/crackmes nymann/crackmes-dl search-and-download --no-quick --platform "Windows" --lang "C/C++" --output-dir crackmes
 ```
 
 If you want to use docker-compose:
@@ -100,7 +106,7 @@ services:
     container_name: crackmes_dl
     image: nyman/crackmes_dl:latest
     volumes:
-      - ./crackmes:/home/non_privileged_user/crackmes
+      - ./crackmes:/home/u/crackmes
 ```
 
 ## Development
