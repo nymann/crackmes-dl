@@ -7,8 +7,10 @@ Download crackmes from <https://crackmes.one> using the commandline.
 Requires [python3 (version >= 3.9)](https://www.python.org/downloads/) and pip
 
 ```sh
-pip install --user git+https://github.com/nymann/crackmes_dl.git
+pip install --user crackmes-dl
 ```
+
+Check the project out on [Pypi](https://pypi.org/project/crackmes-dl/).
 
 ## Usage
 
