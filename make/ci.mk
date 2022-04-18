@@ -13,7 +13,7 @@ docker-push: ${VERSION}
 	    -t ${DOCKER_REPO}:latest \
 	    -t ${DOCKER_TAG} \
 		-f docker/Dockerfile .
-	@docker push ${DOCKER_TAG}
+	@docker push --all-tags ${DOCKER_REPO}
 
 version-requirements: ${VERSION}
 	# This is used as a precursor to building images via the pipeline
