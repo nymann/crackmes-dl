@@ -1,5 +1,8 @@
 from datetime import datetime
+from io import BytesIO
+import os
 from pathlib import Path
+from zipfile import ZipFile
 
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet
@@ -115,17 +118,16 @@ class CrackmeEndpoint(Endpoint):
 
     def download(self, session: Session, crackme: Link, output_dir: Path) -> None:  # noqa: WPS210
         crackme_id: str = crackme.url.split("/")[-1]
-        output_path = output_dir.joinpath(f"{crackme_id}.zip")
+        output_path = output_dir.joinpath(crackme_id)
         if self._file_already_exists(output_path=output_path):
             return
-
+        os.makedirs(output_path)
         metadata = self._find_metadata(session=session, crackme_id=crackme_id)
         crackme_dl_response: Response = session.get(metadata.download_url)
-
-        with open(file=output_path, mode="wb+") as zip_file:
-            zip_file.write(crackme_dl_response.content)
-
-        with open(file=output_dir.joinpath(f"{crackme_id}.json"), mode="w+") as json_file:
+        encrypted_zip = ZipFile(BytesIO(crackme_dl_response.content))
+        pwd = b"crackmes.de" if metadata.author == "crackmes.de" else b"crackmes.one"
+        encrypted_zip.extractall(path=output_path, pwd=pwd)
+        with open(file=output_path.joinpath("metadata.json"), mode="w+") as json_file:
             json_file.write(metadata.json())
 
     def _find_metadata(self, session: Session, crackme_id: str) -> Metadata:
